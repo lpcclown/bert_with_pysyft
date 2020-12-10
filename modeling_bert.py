@@ -210,9 +210,9 @@ class BertEmbeddings(nn.Module):
         print("I am at modeling_bert.py line 209-------------")
         position_embeddings = self.position_embeddings(position_ids)
         print("I am at modeling_bert.py line 211-------------")
-        token_type_embeddings = self.token_type_embeddings(token_type_ids)
+        # token_type_embeddings = self.token_type_embeddings(token_type_ids)
         # [PL1209] Without pysyft with uncomment above line can be run successfully.
-        # token_type_embeddings = self.token_type_embeddings(token_type_ids.send(input_ids.location))
+        token_type_embeddings = self.token_type_embeddings(token_type_ids.send(input_ids.location))
         print("I am at modeling_bert.py line 213-------------")
         print("inputs_embeds are: ")
         print(np.shape(inputs_embeds))
@@ -395,12 +395,21 @@ class BertOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
-        print("I am at line 397 of modeling_bert.py forward function BertOutput.")
+        print("I am at line 399 of modeling_bert.py forward function BertOutput.")
+        return input_tensor
+        print(input_tensor.get().size())
+        print(hidden_states.size())
         hidden_states = self.dense(hidden_states)
+        print(hidden_states.size())
         hidden_states = self.dropout(hidden_states)
+        print(hidden_states.size())
         import syft as sy
         if hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):
+            print("hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):")
             input_tensor = input_tensor.get()
+        if hasattr(hidden_states, 'child') and isinstance(hidden_states.child, sy.PointerTensor):
+            print("hasattr(hidden_states, 'child') and isinstance(hidden_states.child, sy.PointerTensor):")
+            hidden_states = hidden_states.get()
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
 

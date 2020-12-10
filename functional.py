@@ -14,6 +14,7 @@ from . import grad  # noqa: F401
 from . import _VF
 from .._jit_internal import boolean_dispatch, List
 
+
 conv1d = _add_docstr(torch.conv1d, r"""
 conv1d(input, weight, bias=None, stride=1, padding=0, dilation=1, groups=1) -> Tensor
 
@@ -218,6 +219,7 @@ Args:
     pad: number of timesteps to pad. Default: 0
 """)
 
+
 # Pooling
 avg_pool1d = _add_docstr(torch.avg_pool1d, r"""
 avg_pool1d(input, kernel_size, stride=None, padding=0, ceil_mode=False, count_include_pad=True) -> Tensor
@@ -248,6 +250,7 @@ Examples::
     tensor([[[ 2.,  4.,  6.]]])
 
 """)
+
 
 avg_pool2d = _add_docstr(torch._C._nn.avg_pool2d, r"""
 avg_pool2d(input, kernel_size, stride=None, padding=0, ceil_mode=False, count_include_pad=True, divisor_override=None) -> Tensor
@@ -355,7 +358,6 @@ def _fractional_max_pool2d(input, kernel_size, output_size=None,
                                               output_ratio, return_indices,
                                               _random_samples)[0]
 
-
 fractional_max_pool2d = boolean_dispatch(
     arg_name='return_indices',
     arg_index=4,
@@ -423,7 +425,6 @@ def _fractional_max_pool3d(input, kernel_size, output_size=None,
                                               output_ratio, return_indices,
                                               _random_samples)[0]
 
-
 fractional_max_pool3d = boolean_dispatch(
     arg_name='return_indices',
     arg_index=4,
@@ -456,7 +457,6 @@ def _max_pool1d(input, kernel_size, stride=None, padding=0, dilation=1,
     return torch.max_pool1d(
         input, kernel_size, stride, padding, dilation, ceil_mode)
 
-
 max_pool1d = boolean_dispatch(
     arg_name='return_indices',
     arg_index=6,
@@ -487,7 +487,6 @@ def _max_pool2d(input, kernel_size, stride=None, padding=0, dilation=1,
         stride = torch.jit.annotate(List[int], [])
     return torch.max_pool2d(
         input, kernel_size, stride, padding, dilation, ceil_mode)
-
 
 max_pool2d = boolean_dispatch(
     arg_name='return_indices',
@@ -520,7 +519,6 @@ def _max_pool3d(input, kernel_size, stride=None, padding=0, dilation=1,
         stride = torch.jit.annotate(List[int], [])
     return torch.max_pool3d(
         input, kernel_size, stride, padding, dilation, ceil_mode)
-
 
 max_pool3d = boolean_dispatch(
     arg_name='return_indices',
@@ -555,7 +553,7 @@ def _unpool_output_size(input, kernel_size, stride, padding, output_size):
             if not (min_size < output_size[d] < max_size):
                 raise ValueError(
                     'invalid output_size "{}" (dim {} must be between {} and {})'
-                        .format(output_size, d, min_size, max_size))
+                    .format(output_size, d, min_size, max_size))
 
         ret = output_size
     return ret
@@ -672,7 +670,6 @@ def _adaptive_max_pool1d(input, output_size, return_indices=False):
     # type: (Tensor, BroadcastingList1[int], bool) -> Tensor
     return adaptive_max_pool1d_with_indices(input, output_size)[0]
 
-
 adaptive_max_pool1d = boolean_dispatch(
     arg_name='return_indices',
     arg_index=2,
@@ -702,7 +699,6 @@ def adaptive_max_pool2d_with_indices(input, output_size, return_indices=False):
 def _adaptive_max_pool2d(input, output_size, return_indices=False):
     # type: (Tensor, BroadcastingList2[int], bool) -> Tensor
     return adaptive_max_pool2d_with_indices(input, output_size)[0]
-
 
 adaptive_max_pool2d = boolean_dispatch(
     arg_name='return_indices',
@@ -734,7 +730,6 @@ def _adaptive_max_pool3d(input, output_size, return_indices=False):
     # type: (Tensor, BroadcastingList3[int], bool) -> Tensor
     return adaptive_max_pool3d_with_indices(input, output_size)[0]
 
-
 adaptive_max_pool3d = boolean_dispatch(
     arg_name='return_indices',
     arg_index=2,
@@ -743,6 +738,7 @@ adaptive_max_pool3d = boolean_dispatch(
     if_false=_adaptive_max_pool3d,
     module_name=__name__,
     func_name='adaptive_max_pool3d')
+
 
 adaptive_avg_pool1d = _add_docstr(torch.adaptive_avg_pool1d, r"""
 adaptive_avg_pool1d(input, output_size) -> Tensor
@@ -1045,7 +1041,6 @@ def celu(input, alpha=1., inplace=False):
         result = torch.celu(input, alpha)
     return result
 
-
 celu_ = _add_docstr(torch.celu_, r"""
 celu_(input, alpha=1.) -> Tensor
 
@@ -1118,7 +1113,6 @@ Applies element-wise :math:`\text{LogSigmoid}(x_i) = \log \left(\frac{1}{1 + \ex
 
 See :class:`~torch.nn.LogSigmoid` for more details.
 """)
-
 
 def gelu(input):
     r"""gelu(input) -> Tensor
@@ -1286,8 +1280,7 @@ def gumbel_softmax(logits, tau=1, hard=False, eps=1e-10, dim=-1):
     if eps != 1e-10:
         warnings.warn("`eps` parameter is deprecated and has no effect.")
 
-    gumbels = -torch.empty_like(logits,
-                                memory_format=torch.legacy_contiguous_format).exponential_().log()  # ~Gumbel(0,1)
+    gumbels = -torch.empty_like(logits, memory_format=torch.legacy_contiguous_format).exponential_().log()  # ~Gumbel(0,1)
     gumbels = (logits + gumbels) / tau  # ~Gumbel(logits,tau)
     y_soft = gumbels.softmax(dim)
 
@@ -1383,55 +1376,56 @@ def linear(input, weight, bias=None):
         # fused op is marginally faster
         ret = torch.addmm(bias, input, weight.t())
     else:
-        output = input.matmul(weight.t())
-        output += bias
-        # if (len(weight.t().size()) == 1 and hasattr(weight, 'child')):
-        #     print("len(weight.t().size()) == 1")
-        #     # print(input)
-        #     # return weight.get().t()
-        #     output = input.matmul(weight.get().t())
-        # else:
-        #     # print("input22222222222222221231231231231231231231231232131231231231")
-        #     # print(input)
-        #     output = input.matmul(weight.t())
-        # print("output.size()-------------------------------------------")
-        # print(output.size())
-        # # if (output.nelement() == 0 or len(output.size()) == 0) or len(bias) == 1:
-        # #     print("output.nelement() == 0 or len(output.size()) == 0 or len(np.shape(bias)) == 1:")
-        # #     print(weight.t().nelement())
-        # #     print(len(weight.t().size()))
-        # #     print(weight.t().shape)
-        # #     print(weight.get().t().shape)
-        # #     output = input.matnul(weight.get().t())
+        print("input size:")
+        print(input.size())
+        # [PL1209] Below two lines are the without pysyft original codes.
+        # output = input.matmul(weight.t())
+        # output += bias
+        if (len(weight.t().size()) == 1 and hasattr(weight, 'child')):
+            print("len(weight.t().size()) == 1")
+            # return weight.get().t()
+            output = input.matmul(weight.get().t())
+        else:
+            # print("input22222222222222221231231231231231231231231232131231231231")
+            # print(input)
+            output = input.matmul(weight.t())
+        print("output.shape-------------------------------------------")
+        print(output.shape)
+        # if (output.nelement() == 0 or len(output.size()) == 0) or len(bias) == 1:
+        #     print("output.nelement() == 0 or len(output.size()) == 0 or len(np.shape(bias)) == 1:")
+        #     print(weight.t().nelement())
+        #     print(len(weight.t().size()))
+        #     print(weight.t().shape)
+        #     print(weight.get().t().shape)
+        #     output = input.matnul(weight.get().t())
 
-        # #     return input
-        # if bias is not None:
-        #     # [PL1020]
-        #     print("output and bias for linear..........")
-        #     # print("output==============================")
-        #     # print(output)
-        #     # print("bias================================")
-        #     # print(bias)
-        #     print("shape-------------------------------")
-        #     print(output.shape)
-        #     print(bias.shape)
+        #     return input
+        if bias is not None:
+            # [PL1020]
+            print("output and bias for linear shape of them..........")
+            # print("output==============================")
+            # print(output)
+            # print("bias================================")
+            # print(bias)
+            print(output.shape)
+            print(bias.shape)
 
-        #     import syft as sy
-        #     if hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor):
-        #         print("I am at hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^")
-        #         # print(bias.get())
-        #         bias = bias.get()
-        #     if hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor):
-        #         print("I am at hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^^^")
-        #         output = output.get()
+            import syft as sy
+            if hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor):
+                print("I am at hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^")
+                # print(bias.get())
+                bias = bias.get()
+            if hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor):
+                print("I am at hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^^^")
+                output = output.get()
 
-        #     output += bias
-        #         # if not (output.nelement() == 0 or len(output.size()) == 0):
-        #         #     output += bias
-        #         # else:
-        #         #     print("i am here to return input--------------------------")
-        #         #     print(input.size())
-        #         #     return input
+            output += bias
+                # if not (output.nelement() == 0 or len(output.size()) == 0):
+                #     output += bias
+                # else:
+                #     print("i am here to return input--------------------------")
+                #     print(input.size())
+                #     return input
         ret = output
     return ret
 
@@ -2541,7 +2535,7 @@ def interpolate(input, size=None, scale_factor=None, mode='nearest', align_corne
             raise ValueError('either size or scale_factor should be defined')
         if size is not None and scale_factor is not None:
             raise ValueError('only one of size or scale_factor should be defined')
-        if scale_factor is not None and isinstance(scale_factor, tuple) \
+        if scale_factor is not None and isinstance(scale_factor, tuple)\
                 and len(scale_factor) != dim:
             raise ValueError('scale_factor shape must match input shape. '
                              'Input is {}D, scale_factor size is {}'.format(dim, len(scale_factor)))
@@ -2556,8 +2550,7 @@ def interpolate(input, size=None, scale_factor=None, mode='nearest', align_corne
         # make scale_factor a tensor in tracing so constant doesn't get baked in
         if torch._C._get_tracing_state():
             return [(torch.floor((input.size(i + 2).float() * torch.tensor(scale_factors[i],
-                                                                           dtype=torch.float32)).float())) for i in
-                    range(dim)]
+                     dtype=torch.float32)).float())) for i in range(dim)]
         else:
             return [int(math.floor(float(input.size(i + 2)) * scale_factors[i])) for i in range(dim)]
 
@@ -2964,7 +2957,6 @@ def pad(input, pad, mode='constant', value=0):
         else:
             raise NotImplementedError("Only 3D, 4D, 5D padding with non-constant padding are supported for now")
 
-
 # distance
 
 
@@ -2999,6 +2991,7 @@ Args:
         :math:`\in [0, \infty]`.
 """)
 
+
 cosine_similarity = _add_docstr(torch.cosine_similarity, r"""
 cosine_similarity(x1, x2, dim=1, eps=1e-8) -> Tensor
 
@@ -3025,6 +3018,7 @@ Example::
     >>> output = F.cosine_similarity(input1, input2)
     >>> print(output)
 """)
+
 
 one_hot = _add_docstr(torch._C._nn.one_hot, r"""
 one_hot(tensor, num_classes=-1) -> LongTensor
@@ -3201,29 +3195,29 @@ def _pad_circular(input, padding):
     return input
 
 
-def multi_head_attention_forward(query,  # type: Tensor
-                                 key,  # type: Tensor
-                                 value,  # type: Tensor
-                                 embed_dim_to_check,  # type: int
-                                 num_heads,  # type: int
-                                 in_proj_weight,  # type: Tensor
-                                 in_proj_bias,  # type: Tensor
-                                 bias_k,  # type: Optional[Tensor]
-                                 bias_v,  # type: Optional[Tensor]
-                                 add_zero_attn,  # type: bool
-                                 dropout_p,  # type: float
-                                 out_proj_weight,  # type: Tensor
-                                 out_proj_bias,  # type: Tensor
-                                 training=True,  # type: bool
-                                 key_padding_mask=None,  # type: Optional[Tensor]
-                                 need_weights=True,  # type: bool
-                                 attn_mask=None,  # type: Optional[Tensor]
+def multi_head_attention_forward(query,                           # type: Tensor
+                                 key,                             # type: Tensor
+                                 value,                           # type: Tensor
+                                 embed_dim_to_check,              # type: int
+                                 num_heads,                       # type: int
+                                 in_proj_weight,                  # type: Tensor
+                                 in_proj_bias,                    # type: Tensor
+                                 bias_k,                          # type: Optional[Tensor]
+                                 bias_v,                          # type: Optional[Tensor]
+                                 add_zero_attn,                   # type: bool
+                                 dropout_p,                       # type: float
+                                 out_proj_weight,                 # type: Tensor
+                                 out_proj_bias,                   # type: Tensor
+                                 training=True,                   # type: bool
+                                 key_padding_mask=None,           # type: Optional[Tensor]
+                                 need_weights=True,               # type: bool
+                                 attn_mask=None,                  # type: Optional[Tensor]
                                  use_separate_proj_weight=False,  # type: bool
-                                 q_proj_weight=None,  # type: Optional[Tensor]
-                                 k_proj_weight=None,  # type: Optional[Tensor]
-                                 v_proj_weight=None,  # type: Optional[Tensor]
-                                 static_k=None,  # type: Optional[Tensor]
-                                 static_v=None  # type: Optional[Tensor]
+                                 q_proj_weight=None,              # type: Optional[Tensor]
+                                 k_proj_weight=None,              # type: Optional[Tensor]
+                                 v_proj_weight=None,              # type: Optional[Tensor]
+                                 static_k=None,                   # type: Optional[Tensor]
+                                 static_v=None                    # type: Optional[Tensor]
                                  ):
     # type: (...) -> Tuple[Tensor, Optional[Tensor]]
     r"""
@@ -3369,9 +3363,9 @@ def multi_head_attention_forward(query,  # type: Tensor
             v = torch.cat([v, bias_v.repeat(1, bsz, 1)])
             if attn_mask is not None:
                 attn_mask = torch.cat([attn_mask,
-                                       torch.zeros((attn_mask.size(0), 1),
-                                                   dtype=attn_mask.dtype,
-                                                   device=attn_mask.device)], dim=1)
+                                      torch.zeros((attn_mask.size(0), 1),
+                                                  dtype=attn_mask.dtype,
+                                                  device=attn_mask.device)], dim=1)
             if key_padding_mask is not None:
                 key_padding_mask = torch.cat(
                     [key_padding_mask, torch.zeros((key_padding_mask.size(0), 1),
