@@ -1367,65 +1367,27 @@ def linear(input, weight, bias=None):
         - Output: :math:`(N, *, out\_features)`
     """
 
-    # print("input.dim--------------------&&&&&&&&&&&&&&&&&&&&&&&")
-    # print(input.dim())
-    # print("bias&&&&&&&&&&&&&&&&&&&&&&&")
-    # print(bias)
-
     if input.dim() == 2 and bias is not None:
         # fused op is marginally faster
         ret = torch.addmm(bias, input, weight.t())
     else:
-        print("input size:")
-        print(input.size())
         # [PL1209] Below two lines are the without pysyft original codes.
         # output = input.matmul(weight.t())
         # output += bias
         if (len(weight.t().size()) == 1 and hasattr(weight, 'child')):
-            print("len(weight.t().size()) == 1")
-            # return weight.get().t()
             output = input.matmul(weight.get().t())
         else:
-            # print("input22222222222222221231231231231231231231231232131231231231")
-            # print(input)
             output = input.matmul(weight.t())
-        print("output.shape-------------------------------------------")
-        print(output.shape)
-        # if (output.nelement() == 0 or len(output.size()) == 0) or len(bias) == 1:
-        #     print("output.nelement() == 0 or len(output.size()) == 0 or len(np.shape(bias)) == 1:")
-        #     print(weight.t().nelement())
-        #     print(len(weight.t().size()))
-        #     print(weight.t().shape)
-        #     print(weight.get().t().shape)
-        #     output = input.matnul(weight.get().t())
-
-        #     return input
         if bias is not None:
             # [PL1020]
-            print("output and bias for linear shape of them..........")
-            # print("output==============================")
-            # print(output)
-            # print("bias================================")
-            # print(bias)
-            print(output.shape)
-            print(bias.shape)
-
             import syft as sy
             if hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor):
                 print("I am at hasattr(bias, 'child') and isinstance(bias.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^")
-                # print(bias.get())
                 bias = bias.get()
             if hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor):
                 print("I am at hasattr(output, 'child') and isinstance(output.child, sy.PointerTensor)^^^^^^^^^^^^^^^^^^^^")
                 output = output.get()
-
             output += bias
-                # if not (output.nelement() == 0 or len(output.size()) == 0):
-                #     output += bias
-                # else:
-                #     print("i am here to return input--------------------------")
-                #     print(input.size())
-                #     return input
         ret = output
     return ret
 

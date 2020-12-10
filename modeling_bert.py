@@ -179,15 +179,10 @@ class BertEmbeddings(nn.Module):
 
     def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None):
         print("I am at line 183 of modeling_bert.py forward function BertEmbeddings.")
-        print(input_ids)
         if input_ids is not None:
             # [PL1014]
             # input_shape = input_ids.size()
             input_shape = np.shape(input_ids)
-            print("input_shape = input_ids.size()")
-            print(np.shape(input_ids))
-            print("np.shape(token_type_ids)")
-            print(np.shape(token_type_ids))
         else:
             # input_shape = inputs_embeds.size()[:-1]
             input_shape = np.shape(inputs_embeds)[:-1]
@@ -195,30 +190,19 @@ class BertEmbeddings(nn.Module):
         seq_length = input_shape[1]
 
         if position_ids is None:
-            print("i am here .........position_ids is None")
             position_ids = self.position_ids[:, :seq_length]
 
         if token_type_ids is None:
-            print("i am here .........token_type_ids is None")  # not printed
             token_type_ids = torch.zeros(input_shape, dtype=torch.long, device=self.position_ids.device).send(
                 input_ids.location)
 
         if inputs_embeds is None:
-            print("i am here .........inputs_embeds is None")
             inputs_embeds = self.word_embeddings(input_ids)
 
-        print("I am at modeling_bert.py line 209-------------")
         position_embeddings = self.position_embeddings(position_ids)
-        print("I am at modeling_bert.py line 211-------------")
         # token_type_embeddings = self.token_type_embeddings(token_type_ids)
         # [PL1209] Without pysyft with uncomment above line can be run successfully.
         token_type_embeddings = self.token_type_embeddings(token_type_ids.send(input_ids.location))
-        print("I am at modeling_bert.py line 213-------------")
-        print("inputs_embeds are: ")
-        print(np.shape(inputs_embeds))
-        print("position_embeddings are: ")
-        print(np.shape(position_embeddings))
-        print("token_type_embeddings shape is: ")
         # token_type_embeddings = token_type_embeddings.send(input_ids.location)
         print(np.shape(token_type_embeddings))
         # embeddings = inputs_embeds + position_embeddings + token_type_embeddings
@@ -396,13 +380,10 @@ class BertOutput(nn.Module):
 
     def forward(self, hidden_states, input_tensor):
         print("I am at line 399 of modeling_bert.py forward function BertOutput.")
+        # [PL1210] Directly return inputs since it will across pointer and real data.
         return input_tensor
-        print(input_tensor.get().size())
-        print(hidden_states.size())
         hidden_states = self.dense(hidden_states)
-        print(hidden_states.size())
         hidden_states = self.dropout(hidden_states)
-        print(hidden_states.size())
         import syft as sy
         if hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):
             print("hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):")
@@ -1391,9 +1372,6 @@ class BertForSequenceClassification(BertPreTrainedModel):
             output_hidden_states=output_hidden_states,
             return_dict=return_dict,
         )
-
-        print("I am at 1354......")
-        print(np.shape(token_type_ids))
 
         pooled_output = outputs[1]
 

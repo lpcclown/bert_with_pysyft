@@ -529,7 +529,7 @@ class Module(object):
         if torch._C._get_tracing_state():
             result = self._slow_forward(*input, **kwargs)
         else:
-            print("I am at line 532 of module.py.")
+            # print("I am at line 532 of module.py.")
             result = self.forward(*input, **kwargs)
         for hook in self._forward_hooks.values():
             hook_result = hook(self, input, result)
