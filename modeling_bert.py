@@ -178,7 +178,7 @@ class BertEmbeddings(nn.Module):
         self.register_buffer("position_ids", torch.arange(config.max_position_embeddings).expand((1, -1)))
 
     def forward(self, input_ids=None, token_type_ids=None, position_ids=None, inputs_embeds=None):
-        print("I am at line 183 of modeling_bert.py forward function BertEmbeddings.")
+        # print("I am at line 183 of modeling_bert.py forward function BertEmbeddings.")
         if input_ids is not None:
             # [PL1014]
             # input_shape = input_ids.size()
@@ -200,11 +200,15 @@ class BertEmbeddings(nn.Module):
             inputs_embeds = self.word_embeddings(input_ids)
 
         position_embeddings = self.position_embeddings(position_ids)
-        # token_type_embeddings = self.token_type_embeddings(token_type_ids)
-        # [PL1209] Without pysyft with uncomment above line can be run successfully.
-        token_type_embeddings = self.token_type_embeddings(token_type_ids.send(input_ids.location))
+        if hasattr(input_ids, 'location') and input_ids.location is not None:
+            print("----------------------------Location-------------------------")
+            print(input_ids.location)
+            token_type_embeddings = self.token_type_embeddings(token_type_ids.send(input_ids.location))
+        else:
+            # [PL1209] Without pysyft with uncomment below one line can be run successfully.
+            token_type_embeddings = self.token_type_embeddings(token_type_ids)
         # token_type_embeddings = token_type_embeddings.send(input_ids.location)
-        print(np.shape(token_type_embeddings))
+        # print(np.shape(token_type_embeddings))
         # embeddings = inputs_embeds + position_embeddings + token_type_embeddings
         embeddings = inputs_embeds + position_embeddings
         embeddings = embeddings + token_type_embeddings
@@ -301,7 +305,7 @@ class BertSelfOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
-        print("I am at line 320 of modeling_bert.py forward function BertSelfOutput.")
+        # print("I am at line 320 of modeling_bert.py forward function BertSelfOutput.")
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
@@ -365,7 +369,7 @@ class BertIntermediate(nn.Module):
             self.intermediate_act_fn = config.hidden_act
 
     def forward(self, hidden_states):
-        print("I am at line 383 of modeling_bert.py forward function BertIntermediate.")
+        # print("I am at line 383 of modeling_bert.py forward function BertIntermediate.")
         hidden_states = self.dense(hidden_states)
         hidden_states = self.intermediate_act_fn(hidden_states)
         return hidden_states
@@ -379,17 +383,17 @@ class BertOutput(nn.Module):
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
     def forward(self, hidden_states, input_tensor):
-        print("I am at line 399 of modeling_bert.py forward function BertOutput.")
+        # print("I am at line 399 of modeling_bert.py forward function BertOutput.")
         # [PL1210] Directly return inputs since it will across pointer and real data.
         return input_tensor
         hidden_states = self.dense(hidden_states)
         hidden_states = self.dropout(hidden_states)
         import syft as sy
         if hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):
-            print("hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):")
+            # print("hasattr(input_tensor, 'child') and isinstance(input_tensor.child, sy.PointerTensor):")
             input_tensor = input_tensor.get()
         if hasattr(hidden_states, 'child') and isinstance(hidden_states.child, sy.PointerTensor):
-            print("hasattr(hidden_states, 'child') and isinstance(hidden_states.child, sy.PointerTensor):")
+            # print("hasattr(hidden_states, 'child') and isinstance(hidden_states.child, sy.PointerTensor):")
             hidden_states = hidden_states.get()
         hidden_states = self.LayerNorm(hidden_states + input_tensor)
         return hidden_states
@@ -525,7 +529,7 @@ class BertPooler(nn.Module):
         self.activation = nn.Tanh()
 
     def forward(self, hidden_states):
-        print("I am at line 539 of modeling_bert.py forward function BertPooler.")
+        # print("I am at line 539 of modeling_bert.py forward function BertPooler.")
         # We "pool" the model by simply taking the hidden state corresponding
         # to the first token.
         first_token_tensor = hidden_states[:, 0]
@@ -567,7 +571,7 @@ class BertLMPredictionHead(nn.Module):
         self.decoder.bias = self.bias
 
     def forward(self, hidden_states):
-        print("I am at line 581 of modeling_bert.py forward function BertLMPrediction.")
+        # print("I am at line 581 of modeling_bert.py forward function BertLMPrediction.")
         hidden_states = self.transform(hidden_states)
         hidden_states = self.decoder(hidden_states)
         return hidden_states

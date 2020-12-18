@@ -1497,12 +1497,12 @@ def embedding(input, weight, padding_idx=None, max_norm=None, norm_type=2.,
         #   torch.nembedding_renorm_
         # remove once script supports set_grad_enabled
         _no_grad_embedding_renorm_(weight, input, max_norm, norm_type)
-    print("In functional.py ------------------------------------------------------------------------------")
-    print(np.shape(weight))
-    print(np.shape(input))
-    print(np.shape(padding_idx))
-    print(np.shape(scale_grad_by_freq))
-    print(np.shape(sparse))
+    # print("In functional.py ------------------------------------------------------------------------------")
+    # print(np.shape(weight))
+    # print(np.shape(input))
+    # print(np.shape(padding_idx))
+    # print(np.shape(scale_grad_by_freq))
+    # print(np.shape(sparse))
     return torch.embedding(weight, input, padding_idx, scale_grad_by_freq, sparse)
 
 
